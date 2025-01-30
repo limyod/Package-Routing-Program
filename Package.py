@@ -1,11 +1,20 @@
+""" 
+Package Module 
+
+This module defines the Package class, which represents a delivery package 
+with details such as address, city, state, zip code, delivery deadline, weight, and notes.
+"""
+
 class Package:
-    def __init__(self, id, address, city, state, zip, delivery_deadline, weight_kilos, notes):
-        self.id = id
+    """Class representing a package"""
+    def __init__(self, package_id, address, city, state,
+                 zipcode, delivery_deadline, weight_kilos, notes):
+        self.package_id = package_id
         self.address = address
         self.city = city
         self.state = state
-        self.zip = self.zip
+        self.zipcode = zipcode
         self.delivery_deadline = delivery_deadline
-        self.weight_kilos = self.weight_kilos
+        self.weight_kilos = weight_kilos
         self.notes = notes
     
