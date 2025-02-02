@@ -37,10 +37,24 @@ def parse_distances_list_from_csv(csv_filename):
             address_list.append(address)
     return address_list
 
+
 def parse_distances_matrix_from_csv(csv_filename):
-    """method returning a distance matrix"""
+    """Reads a CSV and returns a 2D list distance matrix with NaN for empty values."""
+    distance_matrix = []
     
+    with open(csv_filename, encoding='utf-8', mode='r') as csv_file:
+        csv_reader = csv.reader(csv_file)  # Read rows as lists
+        next(csv_reader)  # Skip the first row (headers)
+        
+        for csv_row in csv_reader:
+            # Convert values: empty string → NaN, otherwise → float
+            converted_row = [float(value) if value.strip() else float('nan') for value in csv_row[2:]]
+            distance_matrix.append(converted_row)
+    print(distance_matrix)
+    return distance_matrix
+
 
 
 #parse_package_from_csv('WGUPS Package File.csv')
 #parse_distances_list_from_csv('WGUPS Distance Table.csv')
+#parse_distances_matrix_from_csv('WGUPS Distance Table.csv')
