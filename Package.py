@@ -17,4 +17,6 @@ class Package:
         self.delivery_deadline = delivery_deadline
         self.weight_kilos = weight_kilos
         self.notes = notes
+        self.status = "registered"
+        self.delivered_time = None
     
