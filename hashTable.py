@@ -68,7 +68,7 @@ class HashTable:
                 curr.next = curr.next.next
                 self.elements -= 1
                 return
-        raise KeyError(f"Key '{key}' not found in hashSet")
+        raise KeyError(f"Key '{key}' not found in hashTable")
 
     def get(self, key):
         """
@@ -77,22 +77,42 @@ class HashTable:
         """
         index = self._hash(key)
         if self.buckets[index] is None :
-            return False
+            raise KeyError(f"Key '{key}' not found in hashTable")
         curr = self.buckets[index]
         while curr is not None:
             if curr.key == key:
                 return curr.value
-        raise KeyError(f"Key '{key}' not found in hashSet")
+            curr = curr.next
+        raise KeyError(f"Key '{key}' not found in hashTable")
     
-    def _resize(self, size):
-        self.size = size
-        old_bucket = self.buckets
-        self.buckets = [None] * self.size
-        for bucket in old_bucket:
+    def _resize(self, new_size):
+        old_buckets = self.buckets
+        self.buckets = [None] * new_size
+        self.size = new_size
+        self.elements = 0  # Reset element count since we are reinserting manually
+
+        for bucket in old_buckets:
             curr = bucket
             while curr is not None:
-                self.set(curr.key, curr.value)
+                index = self._hash(curr.key)
+                if self.buckets[index] is None:
+                    self.buckets[index] = ListNode(curr.key, curr.value)
+                else:
+                    new_node = ListNode(curr.key, curr.value, self.buckets[index])
+                    self.buckets[index] = new_node
+                self.elements += 1  # Manually maintain element count
                 curr = curr.next
+
+    def __str__(self):
+        l = []
+        for bucket in self.buckets:
+            if bucket is not None:
+                curr = bucket
+                while curr is not None:
+                    l.append(f"{str(curr.key)}: {str(curr.value)}")
+                    curr = curr.next
+
+        return str(l)
 
 class ListNode:
     """

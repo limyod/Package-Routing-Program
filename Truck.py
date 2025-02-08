@@ -1,5 +1,5 @@
 class Truck:
-    def Truck(self, name, max_packages, speed, depart_time, location):
+    def __init__(self, name, max_packages, speed,location, depart_time = None):
         self.name = name
         self.location = location
         self.max_packages = max_packages
@@ -12,7 +12,7 @@ class Truck:
     def at_capacity(self):
         return len(self.packages) == self.max_packages
     
-    def to_string(self):
+    def __str__(self):
         return (f"Truck {self.name} | Location: {self.location} | "
                 f"Capacity: {len(self.packages)}/{self.max_packages} | "
                 f"Speed: {self.speed} units/hr | Mileage: {self.mileage} miles | "
