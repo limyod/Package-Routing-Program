@@ -1,9 +1,11 @@
 """
+Yodae Lim
+012354133
 main method for package routing program
 """
 
 from datetime import datetime, timedelta
-from hashTable import HashTable
+from HashTable import HashTable
 from truck import Truck
 from csvUtils import parse_package_from_csv, parse_distances_list_from_csv, parse_distances_matrix_from_csv
 
@@ -12,6 +14,7 @@ class RoutingSystem:
         self.day = day
         #parse through packages
         self.packages_list = parse_package_from_csv(package_file)
+        self.unassigned_packages = {p.package_id for p in self.packages_list}
         self.packages_map = HashTable()
         for package in self.packages_list:
             self.packages_map.set(package.package_id, package)
@@ -42,7 +45,9 @@ class RoutingSystem:
             )
         )
 
-    def assign_package(self, package_id, truck):    
+    def assign_package(self, package_id, truck):
+        if(package_id not in self.unassigned_packages):
+            raise ValueError("Package"+ str(package_id) + "is already assigned or doesn't exist")    
         package_location = self.packages_map.get(package_id).address
         distance = self.get_distance(self.address_index_map.get(truck.location), self.address_index_map.get(package_location))
         duration = timedelta(hours = distance / truck.speed)
@@ -55,6 +60,7 @@ class RoutingSystem:
         truck.location = package_location
         truck.mileage += distance
         truck.time = arrival_time
+        self.unassigned_packages.remove(package_id)
 
     #nearest neighbors algorithm for adding packages
     def assign_packages(self, package_id_list, truck):
@@ -66,58 +72,57 @@ class RoutingSystem:
             self.assign_package(package_id, truck)
             unassigned_packages.remove(package_id)
 
-    def assign_all_packages(self, remaining_packages, trucks):
-        for truck in trucks:
-            self.assign_packages(remaining_packages, truck)
-    
-
-# def run_simulation(self, trucks, max_time, time_step=0.1):
-#     current_time = 0
-#     while current_time < max_time:
-#         for truck in trucks:
-#             if truck.
+    def recallTruck(self, truck, hub_location):
+        distance = self.get_distance(self.address_index_map.get(hub_location), self.address_index_map.get(truck.location))
+        duration = timedelta(hours = distance / truck.speed)
+        arrival_time = truck.time + duration
+        truck.location = hub_location
+        truck.mileage += distance
+        truck.time = arrival_time
 
 def main():
     """main routine for package routing""" 
     current_date = datetime.today()
     router = RoutingSystem('WGUPS Package File.csv', 'WGUPS Distance Table.csv', current_date)
-    print(router.address_list)
-    # manually add pacakges to trucks
-    
-    # AM packages
-    # we will have one truck leave at 8am, one truck leave at 9:05, and one truck leave when the last truck returns
-    # 
+
+    # while this would be easy if all the packages had no special instructions,
+    # we realize some of the packages have deadlines, groups, known delays, and truck assignment
+    # Here are a list of them.
+    # 13, 14, 15, 16, 19 must be on the same truck.
+    # hence, we'll consider loading all of these on truck1
+    AM_packages = {1, 13, 14, 15, 16, 19, 20, 29, 30, 31, 34, 36, 40}
+    # there are a group of delayed packages that arrive at 9:05
+    delayed_packages = {6,25,28,32}
+    # delayed packages 6(early), 25(early), 28, 32
+    # there are a group of packages that must be on truck2
+    truck2_packages = {9, 3, 36, 18}
     MAX_PACKAGES = 16
     TRUCK_SPEED = 18 # mph
     hub_address = router.address_list[0]
     truck1 = Truck("truck1", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=8, minute=0, second=0, microsecond=0))
     truck3 = Truck("truck3", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=9, minute=5, second=0, microsecond=0))
     truck2 = Truck("truck2", MAX_PACKAGES, TRUCK_SPEED, hub_address)
-    # we will load the AM packages that are not delayed, first. 1, 6, 13,14,15,16,20,25, 29 ,30, 31, 34, 37, 40]
-    # 13, 14, 15, 16, 19 must be on the same truck.
-    #hence, we'll consider loading all of these on truck1
-    AM_packages = [1, 6 ,13, 14, 15, 16, 19, 20 ,25, 29, 30, 31, 34, 36, 40]
+    #non-delayed, priority packages will be loaded on to the truck
+    print(router.unassigned_packages)
     router.assign_packages(AM_packages, truck1)
-
-    # delayed packages 6(early), 25(early), 28, 32
-    delayed_packages = [6,25,28,32]
+    # we will load all the delayed_packages all together without priority because there are only four.
     router.assign_packages(delayed_packages, truck3)
-    
+    # lets fill up both trucks with the remaining packages, that do not belong on truck2
+    router.assign_packages(router.unassigned_packages - truck2_packages, truck1)
+    router.assign_packages(router.unassigned_packages - truck2_packages, truck3)
+    # both trucks should be full or there should be no more packages left. we can recall them.
+    router.recallTruck(truck1, hub_address)
+    router.recallTruck(truck3, hub_address)
     truck1_return_time = truck1.time
     truck3_return_time = truck3.time
-    truck2_departure_time = max(truck1_return_time, truck3_return_time)
+    truck2_departure_time = min(truck1_return_time, truck3_return_time)
 
     # Now set Truck 2's departure time
     truck2.time = truck2_departure_time
-
     # Assign remaining packages to Truck 2
-    truck2_packages = {9, 3, 36, 18}
-    all_packages = {p.package_id for p in router.packages_list}
-    assigned_packages = set(AM_packages + delayed_packages)
-    remaining_packages = all_packages - assigned_packages - truck2_packages
-    router.assign_packages(truck2_packages, truck2)
-    router.assign_packages(remaining_packages, truck2)
-
+    router.assign_packages(router.unassigned_packages, truck2)
+    # recall the truck
+    router.recallTruck(truck2, hub_address)
     print(len(truck1.packages) + len(truck2.packages) + len(truck3.packages))
     print(truck1.mileage + truck2.mileage + truck3.mileage)
 
