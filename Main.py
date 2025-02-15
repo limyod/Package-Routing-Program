@@ -50,7 +50,7 @@ class RoutingSystem:
         arrival_time = truck.time + duration
         deadline = self.packages_map.get(package_id).delivery_deadline
         if arrival_time > datetime.combine(self.day, deadline) :
-            raise ValueError("we are late.....")
+            raise ValueError("this package id is late: " + str(package_id) +"time is:" + arrival_time.strftime('%H:%M'))
         truck.packages.append(package_id)
         truck.location = package_location
         truck.mileage += distance
@@ -93,31 +93,33 @@ def main():
     truck1 = Truck("truck1", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=8, minute=0, second=0, microsecond=0))
     truck3 = Truck("truck3", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=9, minute=5, second=0, microsecond=0))
     truck2 = Truck("truck2", MAX_PACKAGES, TRUCK_SPEED, hub_address)
-    # we will load the AM packages that are not delayed, first. 1, 6, 13,14,15,16,20,25,
+    # we will load the AM packages that are not delayed, first. 1, 6, 13,14,15,16,20,25, 29 ,30, 31, 34, 37, 40]
     # 13, 14, 15, 16, 19 must be on the same truck.
     #hence, we'll consider loading all of these on truck1
-    AM_packages = [1, 6 ,13, 14, 15, 16, 19, 20 ,25]
+    AM_packages = [1, 6 ,13, 14, 15, 16, 19, 20 ,25, 29, 30, 31, 34, 36, 40]
     router.assign_packages(AM_packages, truck1)
 
     # delayed packages 6(early), 25(early), 28, 32
     delayed_packages = [6,25,28,32]
     router.assign_packages(delayed_packages, truck3)
     
-    all_packages = set(router.packages_list)
-    # Find unassigned packages (remaining ones)
-    assigned_packages = set(AM_packages + delayed_packages)
-    remaining_packages = all_packages - assigned_packages
-    remaining_packages_without_truck2_designation = set(remaining_package - 
-    
-    # these sound like both truck 2 packages
-    # we need to load "Truck2 with certain packages." 3, 36, 18 
-    # package 9 is wrong address listed, corrected at 10:20am, this will be on our late truck
-    truck2_packages = [9, 3, 36, 18]
-    #for now lets just distribute packages without manually assignment and looking at package details
-    print(truck1)
-    print(truck2)
-    print(truck3)
+    truck1_return_time = truck1.time
+    truck3_return_time = truck3.time
+    truck2_departure_time = max(truck1_return_time, truck3_return_time)
 
+    # Now set Truck 2's departure time
+    truck2.time = truck2_departure_time
+
+    # Assign remaining packages to Truck 2
+    truck2_packages = {9, 3, 36, 18}
+    all_packages = {p.package_id for p in router.packages_list}
+    assigned_packages = set(AM_packages + delayed_packages)
+    remaining_packages = all_packages - assigned_packages - truck2_packages
+    router.assign_packages(truck2_packages, truck2)
+    router.assign_packages(remaining_packages, truck2)
+
+    print(len(truck1.packages) + len(truck2.packages) + len(truck3.packages))
+    print(truck1.mileage + truck2.mileage + truck3.mileage)
 
 if __name__ == "__main__":
     main()

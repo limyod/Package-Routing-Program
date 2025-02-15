@@ -41,7 +41,7 @@ def parse_distances_list_from_csv(csv_filename):
             full_location_info = row[0].strip()
             parts = full_location_info.split('\n', 1)
             if len(parts) > 1:
-                address_part = parts[1].strip()  # Take the part after the newline (the address)
+                address_part = parts[1].strip()  # Take the part beforethe newline (the address)
                 # Remove any extra commas or parenthetical information
                 # address_part = address_part.split('(', 1)[0].rstrip(',').strip()
                 addresses.append(address_part)
