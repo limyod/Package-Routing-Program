@@ -80,6 +80,15 @@ class RoutingSystem:
         truck.mileage += distance
         truck.time = arrival_time
 
+    def get_package_status_at_time(self, package_id, query_time):
+        package = self.packages_map.get(package_id)
+        #check the delivery time, loading time
+        # if the query time is before the loading time, its At Hub
+        # if the query time is after teh loading time but before the deliveryt time, its enroute
+        # if the query time is after the delivery time, its deliverred
+        # we'll need to add delivery status, delivery time, and loading time for packages.
+        # think about how to store.
+
 def main():
     """main routine for package routing""" 
     current_date = datetime.today()
