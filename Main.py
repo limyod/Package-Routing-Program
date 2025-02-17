@@ -53,13 +53,17 @@ class RoutingSystem:
         duration = timedelta(hours = distance / truck.speed)
 
         arrival_time = truck.time + duration
-        deadline = self.packages_map.get(package_id).delivery_deadline
+        package = self.packages_map.get(package_id)
+        deadline = package.delivery_deadline
         if arrival_time > datetime.combine(self.day, deadline) :
             raise ValueError("this package id is late: " + str(package_id) +"time is:" + arrival_time.strftime('%H:%M'))
         truck.packages.append(package_id)
         truck.location = package_location
         truck.mileage += distance
         truck.time = arrival_time
+        package.delivered_time = arrival_time
+        package.status = "scheduled"
+        package.load_time = truck.depart_time
         self.unassigned_packages.remove(package_id)
 
     #nearest neighbors algorithm for adding packages
@@ -80,14 +84,26 @@ class RoutingSystem:
         truck.mileage += distance
         truck.time = arrival_time
 
-    def get_package_status_at_time(self, package_id, query_time):
+    def get_status_for_package_id(self, package_id, query_time):
         package = self.packages_map.get(package_id)
-        #check the delivery time, loading time
-        # if the query time is before the loading time, its At Hub
-        # if the query time is after teh loading time but before the deliveryt time, its enroute
-        # if the query time is after the delivery time, its deliverred
-        # we'll need to add delivery status, delivery time, and loading time for packages.
-        # think about how to store.
+        return self.get_status_for_package(package, query_time)
+
+    def get_status_for_package(self, package, query_time):
+        if(query_time < package.load_time):
+            return "assigned"
+        elif query_time < package.delivered_time:
+            return "in transit"
+        else :
+            return f"delivered at {package.delivered_time}"
+        
+    def get_all_package_status_at_time(self, package_id, query_time):
+        result = []
+        for package in self.packages_list:
+            status = self.get_status_for_package(package, query_time)
+            result.append(f"package {package.package_id} {status}")
+    
+    def get_truck_status(self, truck, query_time):
+        # this should get the truck time
 
 def main():
     """main routine for package routing""" 
@@ -127,6 +143,7 @@ def main():
     truck2_departure_time = min(truck1_return_time, truck3_return_time)
 
     # Now set Truck 2's departure time
+    truck2.depart_time = truck2_departure_time
     truck2.time = truck2_departure_time
     # Assign remaining packages to Truck 2
     router.assign_packages(router.unassigned_packages, truck2)

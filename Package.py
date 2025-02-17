@@ -20,6 +20,7 @@ class Package:
         #these two fields will be updated when loaded/ delivered
         self.status = "registered"
         self.delivered_time = None
+        self.load_time = None
 
     def __str__(self):
         return (f"Package ID: {self.package_id}\n"
