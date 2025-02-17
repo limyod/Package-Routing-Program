@@ -69,7 +69,7 @@ class HashTable:
                 self.elements -= 1
                 return
         raise KeyError(f"Key '{key}' not found in hashTable")
-
+    
     def get(self, key):
         """
         get the value that corresponds to the key from the hashtable
@@ -103,6 +103,16 @@ class HashTable:
                 self.elements += 1  # Manually maintain element count
                 curr = curr.next
 
+    def keys(self):
+        key_list = []
+        for bucket in self.buckets:
+            if bucket is not None:
+                curr = bucket
+                while curr is not None:
+                    key_list.append(curr.key)
+                    curr = curr.next
+        return key_list
+    
     def __str__(self):
         l = []
         for bucket in self.buckets:

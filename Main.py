@@ -94,16 +94,29 @@ class RoutingSystem:
         elif query_time < package.delivered_time:
             return "in transit"
         else :
-            return f"delivered at {package.delivered_time}"
+            return f"delivered at {package.delivered_time.time()}"
         
-    def get_all_package_status_at_time(self, package_id, query_time):
+    def get_all_package_status_at_time(self, query_time):
         result = []
         for package in self.packages_list:
             status = self.get_status_for_package(package, query_time)
-            result.append(f"package {package.package_id} {status}")
+            result.append(f"package {package.package_id:<4} | {status}")
+        return result
     
     def get_truck_status(self, truck, query_time):
         # this should get the truck time
+        # assuming that the truck does not lose time when dropping off packages
+        if(query_time < truck.depart_time):
+            return 0
+        
+        if(query_time > truck.time):
+            return truck.mileage
+        
+        #interpolate distance traveled
+        travel_time = truck.time - truck.depart_time
+        travel_time_till_query = query_time - truck.depart_time
+        return truck.mileage * travel_time_till_query / travel_time
+        
 
 def main():
     """main routine for package routing""" 
@@ -127,8 +140,8 @@ def main():
     truck1 = Truck("truck1", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=8, minute=0, second=0, microsecond=0))
     truck3 = Truck("truck3", MAX_PACKAGES, TRUCK_SPEED, hub_address, current_date.replace(hour=9, minute=5, second=0, microsecond=0))
     truck2 = Truck("truck2", MAX_PACKAGES, TRUCK_SPEED, hub_address)
+    trucks = [truck1, truck2, truck3]
     #non-delayed, priority packages will be loaded on to the truck
-    print(router.unassigned_packages)
     router.assign_packages(AM_packages, truck1)
     # we will load all the delayed_packages all together without priority because there are only four.
     router.assign_packages(delayed_packages, truck3)
@@ -140,17 +153,61 @@ def main():
     router.recallTruck(truck3, hub_address)
     truck1_return_time = truck1.time
     truck3_return_time = truck3.time
-    truck2_departure_time = min(truck1_return_time, truck3_return_time)
 
-    # Now set Truck 2's departure time
+    # lets update the address of package # 9.
+    package_9 = router.packages_map.get(9)
+    package_9.address = '410 S State St'
+    package_9.city = 'Salt Lake City'
+    package_9.state = 'UT'
+    package_9.zipcode = '84111'
+    # Now set Truck 2's departure time. it'll be 9:30 to match the update, or when the first truck comes back. whichever is later
+    truck2_departure_time = min(truck1_return_time, truck3_return_time, current_date.replace(hour=9, minute=30, second=0, microsecond=0))
     truck2.depart_time = truck2_departure_time
     truck2.time = truck2_departure_time
+    
+
     # Assign remaining packages to Truck 2
     router.assign_packages(router.unassigned_packages, truck2)
     # recall the truck
     router.recallTruck(truck2, hub_address)
-    print(len(truck1.packages) + len(truck2.packages) + len(truck3.packages))
-    print(truck1.mileage + truck2.mileage + truck3.mileage)
+
+    
+    ### this is the CLI section
+    print('welcome to the package status viewer')
+    print("here are some delivery stats: ")
+    print(f"total mileage is {truck1.mileage + truck2.mileage + truck3.mileage}")
+    print("the trucks are now.....")
+    for truck in trucks:
+        print(truck)
+    
+    while True:
+        package_input = input('Enter a package id or press Enter to view all packages (or type "quit" to exit): ').strip()
+
+        if package_input.lower() == 'quit':
+                print("Exiting the program...")
+                break
+
+        if package_input and (not package_input.isdigit() or int(package_input) not in router.packages_map.keys()):
+            print("That is not a valid package id")
+            continue
+
+        # Get time input
+        time_input = input('Enter a time to check the status (HH:MM): ').strip()
+        try:
+            time_object = datetime.strptime(time_input, "%H:%M")
+            today = datetime.today().date()
+            query_date_time = datetime.combine(today, time_object.time())
+        except ValueError:
+            print("Invalid time format. Please enter time in HH:MM format.")
+            continue
+
+        # Show package status based on input
+        if package_input == '':
+            all_packages = router.get_all_package_status_at_time(query_date_time)
+            print("\n".join(all_packages))
+        else:
+            print(router.get_status_for_package_id(int(package_input), query_date_time))
+
 
 if __name__ == "__main__":
     main()
