@@ -89,22 +89,24 @@ class RoutingSystem:
         return self.get_status_for_package(package, query_time)
 
     def get_status_for_package(self, package, query_time):
+        status = ""
         if(query_time < package.load_time):
-            return "assigned"
+            status = "assigned"
         elif query_time < package.delivered_time:
-            return "in transit"
+            status = "in transit"
         else :
-            return f"delivered at {package.delivered_time.time()}"
+            status = f"delivered at {package.delivered_time.time()}"
+        return f"package {package.package_id:<4} | {status}"
         
-    def get_all_package_status_at_time(self, query_time):
+    def get_list_package_status_at_time(self, package_id_list, query_time):
         result = []
-        for package in self.packages_list:
-            status = self.get_status_for_package(package, query_time)
-            result.append(f"package {package.package_id:<4} | {status}")
+        for package in package_id_list:
+            status = self.get_status_for_package_id(package, query_time)
+            result.append(status)
         return result
     
     def get_truck_status(self, truck, query_time):
-        # this should get the truck time
+        # this should get the truck mileage
         # assuming that the truck does not lose time when dropping off packages
         if(query_time < truck.depart_time):
             return 0
@@ -161,25 +163,26 @@ def main():
     package_9.state = 'UT'
     package_9.zipcode = '84111'
     # Now set Truck 2's departure time. it'll be 9:30 to match the update, or when the first truck comes back. whichever is later
-    truck2_departure_time = min(truck1_return_time, truck3_return_time, current_date.replace(hour=9, minute=30, second=0, microsecond=0))
+    truck2_departure_time = max(min(truck1_return_time, truck3_return_time), current_date.replace(hour=9, minute=30, second=0, microsecond=0))
     truck2.depart_time = truck2_departure_time
     truck2.time = truck2_departure_time
     
-
     # Assign remaining packages to Truck 2
     router.assign_packages(router.unassigned_packages, truck2)
     # recall the truck
     router.recallTruck(truck2, hub_address)
 
-    
     ### this is the CLI section
-    print('welcome to the package status viewer')
-    print("here are some delivery stats: ")
-    print(f"total mileage is {truck1.mileage + truck2.mileage + truck3.mileage}")
-    print("the trucks are now.....")
+    print('Welcome to the Package Status Viewer!')
+    print('-' * 50)
+    print("Here are some delivery stats:\n")
+    print(f"Total mileage traveled by all trucks: {truck1.mileage + truck2.mileage + truck3.mileage:.2f} miles")
+    
+    print("\nTruck statuses:")
     for truck in trucks:
         print(truck)
     
+    print('-' * 50)
     while True:
         package_input = input('Enter a package id or press Enter to view all packages (or type "quit" to exit): ').strip()
 
@@ -203,11 +206,24 @@ def main():
 
         # Show package status based on input
         if package_input == '':
-            all_packages = router.get_all_package_status_at_time(query_date_time)
-            print("\n".join(all_packages))
+            print("Package and truck status:")
+            total_truck_mileage = 0
+            for truck in trucks:
+                mileage = router.get_truck_status(truck, query_date_time)
+                total_truck_mileage += mileage
+
+                print(f"\n========= {truck.name} =========")
+                print(f"Total mileage at {query_date_time.time()} is {mileage} miles")
+                statuses = router.get_list_package_status_at_time(truck.packages, query_date_time)
+                print("\n".join(statuses))
+            unassigned_num = len(router.unassigned_packages)
+            print(f"\nThere are {unassigned_num} packages that are not assigned\n")
+            print(f"Trucks have traveled a total of {total_truck_mileage} miles at {query_date_time.time()}")
         else:
             print(router.get_status_for_package_id(int(package_input), query_date_time))
+            print()
 
+        print('-' * 50)
 
 if __name__ == "__main__":
     main()
