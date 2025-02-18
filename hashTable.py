@@ -13,7 +13,7 @@ class HashTable:
 
     def _hash(self, key):
         return hash(key) % self.size
-    
+
     def set(self, key, value):
         """sets a key value pair into a hashtable"""
         index = self._hash(key)
@@ -26,7 +26,7 @@ class HashTable:
             # assuming recent additions are more likely to be used again
             curr = self.buckets[index]
             while curr is not None:
-                if(curr.key == key):
+                if curr.key == key:
                     curr.value = value
                     return
                 curr = curr.next
@@ -69,7 +69,7 @@ class HashTable:
                 self.elements -= 1
                 return
         raise KeyError(f"Key '{key}' not found in hashTable")
-    
+
     def get(self, key):
         """
         get the value that corresponds to the key from the hashtable
@@ -84,7 +84,7 @@ class HashTable:
                 return curr.value
             curr = curr.next
         raise KeyError(f"Key '{key}' not found in hashTable")
-    
+
     def _resize(self, new_size):
         old_buckets = self.buckets
         self.buckets = [None] * new_size
@@ -112,7 +112,7 @@ class HashTable:
                     key_list.append(curr.key)
                     curr = curr.next
         return key_list
-    
+
     def __str__(self):
         l = []
         for bucket in self.buckets:

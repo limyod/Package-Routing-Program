@@ -30,6 +30,4 @@ class Package:
                 f"Notes: {self.notes}\n"
                 f"Status: {self.status}\n"
                 f"Delivered Time: {self.delivered_time if self.delivered_time else 'Not Delivered'}")
-
-        
     
