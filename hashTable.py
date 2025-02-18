@@ -1,4 +1,3 @@
-
 # open probing and chaining were both considered. 
 # In a packaging system, where the number of packages may change over time,
 # we have decided to use chaining as it handles growth better.
