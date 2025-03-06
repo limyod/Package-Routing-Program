@@ -119,7 +119,8 @@ class RoutingSystem:
             status = "in transit"
         else :
             status = f"delivered at {package.delivered_time.time()}"
-        return f"package {package.package_id:<4} | due: {package.delivery_deadline} | {status:<21} | {package.address:<20} | {package.notes}"
+        package_info = package.get_info_at(query_time)
+        return f"package {package.package_id:<4} | due: {package.delivery_deadline} | {status:<21} | {package_info['address']:<20} | {package.notes}"
 
     def get_list_package_status_at_time(self, package_id_list, query_time):
         """gets the status of all packages 

@@ -49,11 +49,10 @@ def main():
 
     # lets update the address of package # 9.
     package_9 = router.packages_map.get(9)
-    package_9.address = '410 S State St'
-    package_9.city = 'Salt Lake City'
-    package_9.state = 'UT'
-    package_9.zipcode = '84111'
-    # Now set Truck 2's departure time. it'll be 9:30 to match the update, 
+    package_9.update_info(current_date.replace(hour=10, minute=20, second=0, microsecond=0),
+                     address='410 S State St', city = 'Salt Lake City', state='UT', zipcode='84111')
+
+    # Now set Truck 2's departure time. it'll be 9:30 to match the update,
     # or when the first truck comes back. whichever is later
     truck2_departure_time = max(min(truck1_return_time, truck3_return_time),
                                  current_date.replace(hour=9, minute=30, second=0, microsecond=0))
