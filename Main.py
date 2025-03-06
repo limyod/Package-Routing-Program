@@ -18,12 +18,12 @@ def main():
     # Here are a list of them.
     # 13, 14, 15, 16, 19 must be on the same truck.
     # hence, we'll consider loading all of these on truck1
-    AM_packages = {1, 13, 14, 15, 16, 19, 20, 29, 30, 31, 34, 36, 40}
+    AM_packages = {1, 13, 14, 15, 16, 19, 20, 29, 30, 31, 34, 40}
     # there are a group of delayed packages that arrive at 9:05
     delayed_packages = {6,25,28,32}
     # delayed packages 6(early), 25(early), 28, 32
     # there are a group of packages that must be on truck2
-    truck2_packages = {9, 3, 36, 18}
+    truck2_packages = {9, 3, 36, 38, 18}
     MAX_PACKAGES = 16
     TRUCK_SPEED = 18 # mph
     hub_address = router.address_list[0]
